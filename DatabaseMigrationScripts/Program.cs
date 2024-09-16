@@ -9,14 +9,15 @@ using System.Collections.Specialized;
 using System.Text;
 
 Console.WriteLine("Please Enter the server you wish to connect to: ");
-var myserver = "";
+var myserver = Console.Read();
 Console.WriteLine("Please Enter the user ID:");
-var userId = "";
+var userId = Console.Read();
 Console.WriteLine("Please Enter the password:");
-var pass = "";
+var pass = Console.Read();
 //var connection = new SqlConnection($"Server={myserver};Database=master; User ID={userId};Password={pass};Trust Server Certificate=True");
 Console.WriteLine("Enter the directory to store the Scripts:");
-var outputDirectory = @"C:\DatabaseScripts";
+var outputDirectory = Console.Read();
+
 var connectionString = $"Server={myserver};Database=master; User ID={userId};Password={pass};Trust Server Certificate=True";
 
 
