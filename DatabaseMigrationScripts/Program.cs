@@ -8,24 +8,35 @@ using Microsoft.SqlServer.Management.Smo;
 using System.Collections.Specialized;
 using System.Text;
 
-Console.WriteLine("Please Enter the server you wish to connect to: ");
-var myserver = Console.Read();
-Console.WriteLine("Please Enter the user ID:");
-var userId = Console.Read();
-Console.WriteLine("Please Enter the password:");
-var pass = Console.Read();
-//var connection = new SqlConnection($"Server={myserver};Database=master; User ID={userId};Password={pass};Trust Server Certificate=True");
-Console.WriteLine("Enter the directory to store the Scripts:");
-var outputDirectory = Console.Read();
+Console.Write("Please Enter the server you wish to connect to: ");
+var myserver = Console.ReadLine();
+Console.Write("Do you need to provide SQL Credentials? [Y] or [N] ");
+var creds = Console.ReadLine();
+var userId = "";
+var pass = "";
+var connectionString = "";
+if (creds.ToLower().Equals("y"))
+{
+    Console.Write("Please Enter the user ID: ");
+    userId = Console.ReadLine();
+    Console.Write("Please Enter the password: ");
+    pass = Services.GetPassword();
+    connectionString = $"Server={myserver};Database=master; User ID={userId};Password={pass};Trust Server Certificate=True";
+}
+else
+{
+    connectionString = $"Server={myserver};Integrated Security=True;Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False";
+}
 
-var connectionString = $"Server={myserver};Database=master; User ID={userId};Password={pass};Trust Server Certificate=True";
+Console.Write("Enter the directory to store the Scripts: ");
+var outputDirectory = Console.ReadLine();
 
 
 using (SqlConnection sqlConnection = new SqlConnection(connectionString))
 {
     ServerConnection serverConnection = new ServerConnection(sqlConnection);
     Server server = new Server(serverConnection);
-    var dbResults = ServerFunctions.GetDatabaseScripts(server.Databases, new Scripter(server));
+    //var dbResults = ServerFunctions.GetDatabaseScripts(server.Databases, new Scripter(server));
     foreach (Database db in server.Databases)
     {
         if (!db.IsSystemObject)
@@ -42,6 +53,7 @@ using (SqlConnection sqlConnection = new SqlConnection(connectionString))
             scripter.Options.SchemaQualify = true;
             scripter.Options.ScriptBatchTerminator = true;
             
+            
 
             string outputFile = Path.Combine(outputDirectory, $"{db.Name}_SchemaObjects.sql");
 
@@ -49,6 +61,7 @@ using (SqlConnection sqlConnection = new SqlConnection(connectionString))
             StoredProcedureCollection storedProcedures = db.StoredProcedures;
             UserDefinedFunctionCollection functions = db.UserDefinedFunctions;
             ViewCollection views = db.Views;
+
 
             StringBuilder scriptLines = new();
             scriptLines.AppendLine($"IF NOT EXISTS (SELECT name FROM master.sys.databases WHERE name = '{db.Name}')\nCREATE DATABASE {db.Name}");

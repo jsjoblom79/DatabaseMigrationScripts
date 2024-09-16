@@ -157,7 +157,7 @@ namespace DatabaseMigrationScripts
             var dbInfo = "";
             foreach (Database database in databases)
             {
-                if (!database.IsSystemObject)
+                if (!database.IsSystemObject && database.IsAccessible)
                 {
                     var dbScript = scripter.Script(new Urn[] {database.Urn});
                     foreach (var line in dbScript)
