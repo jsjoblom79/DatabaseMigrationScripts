@@ -9,11 +9,11 @@ using System.Collections.Specialized;
 using System.Text;
 
 Console.WriteLine("Please Enter the server you wish to connect to: ");
-var myserver = "192.168.1.140";
+var myserver = "";
 Console.WriteLine("Please Enter the user ID:");
-var userId = "sa";
+var userId = "";
 Console.WriteLine("Please Enter the password:");
-var pass = "Calvin@rden10";
+var pass = "";
 //var connection = new SqlConnection($"Server={myserver};Database=master; User ID={userId};Password={pass};Trust Server Certificate=True");
 Console.WriteLine("Enter the directory to store the Scripts:");
 var outputDirectory = @"C:\DatabaseScripts";
