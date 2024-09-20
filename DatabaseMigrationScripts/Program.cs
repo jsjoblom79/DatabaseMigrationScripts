@@ -25,7 +25,7 @@ if (creds.ToLower().Equals("y"))
 }
 else
 {
-    connectionString = $"Server={myserver};Integrated Security=True;Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False";
+    connectionString = $"Server={myserver};Integrated Security=True;Trust Server Certificate=True";
 }
 
 Console.Write("Enter the directory to store the Scripts: ");
