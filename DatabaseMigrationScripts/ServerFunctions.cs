@@ -2,13 +2,7 @@
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Sdk.Sfc;
 using Microsoft.SqlServer.Management.Smo;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Microsoft.SqlServer.Management.Dmf.ExpressionNodeFunction;
 
 namespace DatabaseMigrationScripts
 {
@@ -27,7 +21,7 @@ namespace DatabaseMigrationScripts
             return result;
 
         }
-        internal static string? GetFunctionScripts(UserDefinedFunctionCollection functions, Scripter scripter)
+        internal static void GetFunctionScripts(Database db, UserDefinedFunctionCollection functions, Scripter scripter, string outputDirectory)
         {
             string funcInfo = "";
             foreach (UserDefinedFunction func in functions)
@@ -57,10 +51,10 @@ namespace DatabaseMigrationScripts
                     }
                 }
             }
-            return funcInfo;
+            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.FunctionScripts}\\{db.Name}_CreateFunctionScripts.sql", funcInfo);
         }
 
-        internal static string? GetProcedureScripts(StoredProcedureCollection storedProcedures, Scripter scripter)
+        internal static void GetProcedureScripts(Database db, StoredProcedureCollection storedProcedures, Scripter scripter, string outputDirectory)
         {
             string procInfo = "";
 
@@ -92,10 +86,10 @@ namespace DatabaseMigrationScripts
                     }
                 }
             }
-            return procInfo;
+            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.StoredProcedureScripts}\\{db.Name}_CreateProcedureScripts.sql", procInfo);
         }
 
-        internal static string? GetTableScripts(TableCollection tables, Scripter scripter)
+        internal static void GetTableScripts(Database db, TableCollection tables, Scripter scripter, string outputDirectory)
         {
             string tableinfo = "";
             foreach (Table table in tables)
@@ -116,10 +110,10 @@ namespace DatabaseMigrationScripts
                     }
                 }
             }
-            return tableinfo;
+            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.TableScripts}\\{db.Name}_CreateTableScripts.sql",tableinfo);
         }
 
-        internal static string? GetViewScripts(ViewCollection views, Scripter scripter)
+        internal static void GetViewScripts(Database db, ViewCollection views, Scripter scripter, string outputDirectory)
         {
             string viewInfo = "";
             foreach (View view in views)
@@ -149,25 +143,77 @@ namespace DatabaseMigrationScripts
                     }
                 }
             }
-            return viewInfo;
+            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.ViewScripts}\\{db.Name}_CreateViewScripts.sql", viewInfo);
         }
 
-        public static string? GetDatabaseScripts(DatabaseCollection databases, Scripter scripter)
+        public static void ProcessServer(string connectionString, string outputDirectory)
         {
-            var dbInfo = "";
-            foreach (Database database in databases)
+            //Create a sqlConnection object with the connection string.
+            using (SqlConnection sqlConnection = new SqlConnection(connectionString))
             {
-                if (!database.IsSystemObject && database.IsAccessible)
+                //create a server connection with the sqlconnection
+                ServerConnection serverConnection = new ServerConnection(sqlConnection);
+                //Create a server object with the server connection.
+                Server server = new Server(serverConnection);
+               
+                //Read the databases from the server.database list
+                foreach (Database db in server.Databases)
                 {
-                    var dbScript = scripter.Script(new Urn[] {database.Urn});
-                    foreach (var line in dbScript)
+                    if (!db.IsSystemObject && db.Status != DatabaseStatus.Offline)
                     {
-                        dbInfo += line;
+
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine($"Currently working on Database - {db.Name}. {DateTime.Now:MM/dd/yyyy hh:mm:ss}");
+                        
+                        //Create the scripter object and set the options
+                        Scripter scripter = new Scripter(server);
+                        scripter.Options.ScriptDrops = false;
+                        scripter.Options.WithDependencies = false;
+                        scripter.Options.ScriptSchema = true;
+                        scripter.Options.ScriptData = false;
+                        scripter.Options.IncludeHeaders = true;
+                        scripter.Options.SchemaQualify = true;
+                        scripter.Options.ScriptBatchTerminator = true;
+
+                        //Gather the collections to for creating scripts
+                        TableCollection tables = db.Tables;
+                        StoredProcedureCollection storedProcedures = db.StoredProcedures;
+                        UserDefinedFunctionCollection functions = db.UserDefinedFunctions;
+                        ViewCollection views = db.Views;
+
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        GetDatabaseScripts(db, scripter, outputDirectory);
+                        Console.WriteLine("Database Script Complete.");
+                        
+                        GetTableScripts(db, tables, scripter, outputDirectory);
+                        Console.WriteLine("Table Scripts Complete.");
+                        
+                        GetProcedureScripts(db,storedProcedures, scripter, outputDirectory);
+                        Console.WriteLine("Procedure Scripts Complete.");
+                        
+                        GetFunctionScripts(db, functions, scripter, outputDirectory);
+                        Console.WriteLine("Function Scripts Complete.");
+                        
+                        GetViewScripts(db, views, scripter, outputDirectory);
+                        Console.WriteLine("View Scripts Complete.");
+
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.WriteLine($"Database {db.Name} has been completed. {DateTime.Now:MM/dd/yyyy hh:mm:ss}");
+
                     }
-                   // File.WriteAllText(@$"C:\DatabaseScripts\{database.Name}_DBSchema.sql", dbInfo);
                 }
             }
-            return dbInfo;
+        }
+        public static void GetDatabaseScripts(Database database, Scripter scripter, string outputDirectory)
+        {
+            var dbInfo = "";
+            var dbScript = scripter.Script(new Urn[] {database.Urn});
+            foreach (var line in dbScript)
+            {
+                dbInfo += $"{line}\n";
+            }
+
+            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.DatabaseScripts}\\{database.Name}_CreateScript.sql",dbInfo);
         }
     }
 }
