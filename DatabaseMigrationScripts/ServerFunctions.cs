@@ -23,7 +23,7 @@ namespace DatabaseMigrationScripts
         }
         internal static void GetFunctionScripts(Database db, UserDefinedFunctionCollection functions, Scripter scripter, string outputDirectory)
         {
-            string funcInfo = "";
+            string funcInfo = $"USE {db.Name}\nGO\n";
             foreach (UserDefinedFunction func in functions)
             {
                 if (!func.IsSystemObject)
@@ -51,12 +51,12 @@ namespace DatabaseMigrationScripts
                     }
                 }
             }
-            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.FunctionScripts}\\{db.Name}_CreateFunctionScripts.sql", funcInfo);
+            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.FunctionScripts}\\{db.Name}~CreateFunctionScripts.sql", funcInfo);
         }
 
         internal static void GetProcedureScripts(Database db, StoredProcedureCollection storedProcedures, Scripter scripter, string outputDirectory)
         {
-            string procInfo = "";
+            string procInfo = $"USE {db.Name}\nGO\n";
 
 
             foreach (StoredProcedure proc in storedProcedures)
@@ -86,12 +86,12 @@ namespace DatabaseMigrationScripts
                     }
                 }
             }
-            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.StoredProcedureScripts}\\{db.Name}_CreateProcedureScripts.sql", procInfo);
+            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.StoredProcedureScripts}\\{db.Name}~CreateProcedureScripts.sql", procInfo);
         }
 
         internal static void GetTableScripts(Database db, TableCollection tables, Scripter scripter, string outputDirectory)
         {
-            string tableinfo = "";
+            string tableinfo = $"USE {db.Name}\nGO\n";
             foreach (Table table in tables)
             {
                 if (!table.IsSystemObject)
@@ -110,12 +110,12 @@ namespace DatabaseMigrationScripts
                     }
                 }
             }
-            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.TableScripts}\\{db.Name}_CreateTableScripts.sql",tableinfo);
+            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.TableScripts}\\{db.Name}~CreateTableScripts.sql",tableinfo);
         }
 
         internal static void GetViewScripts(Database db, ViewCollection views, Scripter scripter, string outputDirectory)
         {
-            string viewInfo = "";
+            string viewInfo = $"USE {db.Name}\nGO\n";
             foreach (View view in views)
             {
                 if (!view.IsSystemObject)
@@ -143,7 +143,7 @@ namespace DatabaseMigrationScripts
                     }
                 }
             }
-            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.ViewScripts}\\{db.Name}_CreateViewScripts.sql", viewInfo);
+            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.ViewScripts}\\{db.Name}~CreateViewScripts.sql", viewInfo);
         }
 
         public static void ProcessServer(string connectionString, string outputDirectory)
@@ -213,7 +213,7 @@ namespace DatabaseMigrationScripts
                 dbInfo += $"{line}\n";
             }
 
-            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.DatabaseScripts}\\{database.Name}_CreateScript.sql",dbInfo);
+            File.WriteAllText($"{outputDirectory}\\{DirectoryFolders.DatabaseScripts}\\{database.Name}~CreateScript.sql",dbInfo);
         }
     }
 }
